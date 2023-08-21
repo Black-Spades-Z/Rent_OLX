@@ -18,7 +18,7 @@ class UnhandledException(Exception):
 def rss_parser(
     xml: str,
     limit: Optional[int] = None,
-    json: bool = False,
+    metro: bool = False,
 ) -> List[str]:
     """
     RSS parser.
@@ -43,100 +43,121 @@ def rss_parser(
     """
     # Your code goes here
 
-    parser = bs(xml, 'lxml-xml')
-    counter = 0
+    html = bs(xml, 'html.parser')
 
+    houses = list()
+    PATTERN_LIST = ('qiz', 'Qizlarga', 'Qiz', 'Qizlarni', 'qizlarni' ,  'Xozyayka', 'Киз', 'киз', 'кизларга', 'Кизларга', 'Кизларни', 'TTZ', 'ТТЗ','Ттз', 'ТТз', 'Куйлик', 'Куйлук', 'Посуточно')
 
-    channelTitle = parser.select_one("title").string.extract()
-    channelLanguage = parser.select_one("language").string.extract()
-    channelLink = parser.select_one("link").string.extract()
-    channelDescription = parser.select_one("description").string.extract()
-    items = parser.find_all("item")
+    list_of_houses = html.find(attrs={"data-testid" : "listing-grid"})
+    for elements in list_of_houses.find_all(attrs={"data-cy" : "l-card"}):
+        name =  elements.find('h6').get_text()
+        # if re.findall(PATTERN_LIST, name) is not None:
+        #     print('Found ' + name)
+        #     continue
+        house = dict(
+            { "Name" : name,
+                "Link": "https://www.olx.uz" + elements.find("a", href = True)['href']
 
-
-    #For JSON output, more code, but better Result
-
-    if json:
-
-        items_list = list()
-
-        #Before creating Dictionary for JSON, we should collect all item details
-
-        for item in items:
-            itemTitle = item.select_one("item> title").string.extract()
-            itemLink = item.select_one("item> link").string.extract()
-            itemPubDate = item.select_one("item > pubDate").string.extract()
-            itemDescription = item.select_one("item> description").string.extract().strip()
-
-            temp_dictionary = {
-                "title": itemTitle,
-                "pubDate": itemPubDate,
-                "link": itemLink,
-                "description": itemDescription,
-            }
-            items_list.append(temp_dictionary)
-
-            #For limit parameter
-
-            counter += 1
-            if counter == limit:
-                break
-
-        # Creating dictionary for JSON converting
-
-        json_dictionary = {
-            "title": channelTitle,
-            "language": channelLanguage,
-            "link": channelLink,
-            "description": channelDescription,
-            "items": [items_list]
-        }
-
-
-
-        # Converting dictionary to JSON
-
-        json_result = js.dumps(json_dictionary, indent=2, ensure_ascii=False)
-        return list(str(json_result).split(", "))
-
-
-
-    #If we do not need JSON format, we should create list to return it later
-
-    result = list([f"Feed: {channelTitle}",
-                   f"Language: {channelLanguage}",
-                   f"Link: {channelLink}",
-                   f"Description: {channelDescription}",
-                   " ", " "])
-
-    #Collecting item details
-
-    for item in items:
-
-        itemTitle = item.select_one("item> title").string.extract()
-        itemLink = item.select_one("item> link").string.extract()
-        itemPubDate = item.select_one("item > pubDate").string.extract()
-
-        itemDescription = item.select_one("item> description").string.extract().strip()
-
-
-
-        itemsList = list([f"Title: {itemTitle}",
-                       f"Link: {itemLink}",
-                       f"Published: {itemPubDate}",
-                       " ",
-                       f"{itemDescription}", " ", " "])
-        counter += 1
-        result.extend(itemsList)
-        itemsList.clear()
-        if counter == limit:
-            break
+             }
+        )
+        houses.append(house)
+        print(house)
 
 
 
 
 
-    return result
+    #
+    # channelTitle = parser.select_one("title").string.extract()
+    # channelLanguage = parser.select_one("language").string.extract()
+    # channelLink = parser.select_one("link").string.extract()
+    # channelDescription = parser.select_one("description").string.extract()
+    # items = parser.find_all("item")
+    #
+    #
+    # #For JSON output, more code, but better Result
+    #
+    # if json:
+    #
+    #     items_list = list()
+    #
+    #     #Before creating Dictionary for JSON, we should collect all item details
+    #
+    #     for item in items:
+    #         itemTitle = item.select_one("item> title").string.extract()
+    #         itemLink = item.select_one("item> link").string.extract()
+    #         itemPubDate = item.select_one("item > pubDate").string.extract()
+    #         itemDescription = item.select_one("item> description").string.extract().strip()
+    #
+    #         temp_dictionary = {
+    #             "title": itemTitle,
+    #             "pubDate": itemPubDate,
+    #             "link": itemLink,
+    #             "description": itemDescription,
+    #         }
+    #         items_list.append(temp_dictionary)
+    #
+    #         #For limit parameter
+    #
+    #         counter += 1
+    #         if counter == limit:
+    #             break
+    #
+    #     # Creating dictionary for JSON converting
+    #
+    #     json_dictionary = {
+    #         "title": channelTitle,
+    #         "language": channelLanguage,
+    #         "link": channelLink,
+    #         "description": channelDescription,
+    #         "items": [items_list]
+    #     }
+    #
+    #
+    #
+    #     # Converting dictionary to JSON
+    #
+    #     json_result = js.dumps(json_dictionary, indent=2, ensure_ascii=False)
+    #     return list(str(json_result).split(", "))
+    #
+    #
+    #
+    # #If we do not need JSON format, we should create list to return it later
+    #
+    # result = list([f"Feed: {channelTitle}",
+    #                f"Language: {channelLanguage}",
+    #                f"Link: {channelLink}",
+    #                f"Description: {channelDescription}",
+    #                " ", " "])
+    #
+    # #Collecting item details
+    #
+    # for item in items:
+    #
+    #     itemTitle = item.select_one("item> title").string.extract()
+    #     itemLink = item.select_one("item> link").string.extract()
+    #     itemPubDate = item.select_one("item > pubDate").string.extract()
+    #
+    #     itemDescription = item.select_one("item> description").string.extract().strip()
+    #
+    #
+    #
+    #     itemsList = list([f"Title: {itemTitle}",
+    #                    f"Link: {itemLink}",
+    #                    f"Published: {itemPubDate}",
+    #                    " ",
+    #                    f"{itemDescription}", " ", " "])
+    #     counter += 1
+    #     result.extend(itemsList)
+    #     itemsList.clear()
+    #     if counter == limit:
+    #         break
+    #
+    #
+    #
+    #
+    #
+    # return result
 
 
 def main(argv: Optional[Sequence] = None):
@@ -145,22 +166,35 @@ def main(argv: Optional[Sequence] = None):
     """
 
     parser = ArgumentParser(
-        prog="rss_reader",
-        description="Pure Python command-line RSS reader.",
+        prog="Rent Finder",
+        description="Program to sort houses",
     )
-    parser.add_argument("source", help="RSS URL", type=str, nargs="?")
     parser.add_argument(
-        "--json", help="Print result as JSON in stdout", action="store_true"
+        "-L", "--lowest", help="Lowest price", type=int
     )
+    parser.add_argument(
+        "-H", "--highest", help="Highest available price", type=int)
+
+    parser.add_argument(
+        "-m", "--metro", help="Existence of metro", type=bool)
+
     parser.add_argument(
         "--limit", help="Limit news topics if this parameter provided", type=int
     )
 
-    args = parser.parse_args(argv)
-    xml = requests.get(args.source).text
-    try:
-        print("\n".join(rss_parser(xml, args.limit, args.json)))
+    args = parser.parse_args()
 
+
+    LOWEST = int(args.lowest * 1000000)
+    HIGHEST = int(args.highest * 1000000)
+    LINK = f"https://www.olx.uz/list/q-Ташкент-Аренда-квартира/?search%5Border%5D=created_at:desc&search%5Bfilter_float_price:from%5D={LOWEST}&search%5Bfilter_float_price:to%5D={HIGHEST}"
+
+
+    xml = requests.get(LINK).text
+    try:
+        rss_parser(xml, args.limit, args.metro)
+        #print("\n".join(rss_parser(xml, args.limit, args.metro)))
+       # print(xml)
         return 0
     except Exception as e:
         raise UnhandledException(e)
