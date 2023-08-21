@@ -1,2 +1,2 @@
 # Rent_OLX
-Web Scrapping program to find appropriate house to rent
+The program of searching the Internet for a suitable house for rent
