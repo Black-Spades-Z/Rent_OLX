@@ -46,23 +46,54 @@ def rss_parser(
     html = bs(xml, 'html.parser')
 
     houses = list()
-    PATTERN_LIST = ('qiz', 'Qizlarga', 'Qiz', 'Qizlarni', 'qizlarni' ,  'Xozyayka', 'Киз', 'киз', 'кизларга', 'Кизларга', 'Кизларни', 'TTZ', 'ТТЗ','Ттз', 'ТТз', 'Куйлик', 'Куйлук', 'Посуточно')
+
+    PATTERN_LIST = ('qiz', 'qizlarga', 'qizlarni', 'qizga', 'qizga.', 'qizlar',
+                    'киз', 'кизларга', 'кизларни', 'кизлар',
+                    'девушкам', 'девушке', 'девочек',
+                    'TTZ', 'ТТЗ', 'ттз-4',
+                    'karasu', 'карасу',
+                    'сергили','сергели', 'sergili',
+                    'куйлик', 'куйлук', 'посуточно',
+                    'шерикликка', 'шерикчилик',
+                    'хозяйкой', 'xozyayka', 'xozaykali',
+                    'семейным', 'oilaga', 'oila',
+                    'дача'
+
+
+
+
+                    )
+
 
     list_of_houses = html.find(attrs={"data-testid" : "listing-grid"})
     for elements in list_of_houses.find_all(attrs={"data-cy" : "l-card"}):
-        name =  elements.find('h6').get_text()
-        # if re.findall(PATTERN_LIST, name) is not None:
-        #     print('Found ' + name)
-        #     continue
+        confirm = False
+        header =  elements.find('h6').get_text()
+        name =  re.split('\s',header)
+        for word in name:
+            word = word.lower()
+            if word in PATTERN_LIST:
+                print("Found : ", name)
+                confirm = True
+                break
+        if confirm:
+            continue
+
         house = dict(
-            { "Name" : name,
-                "Link": "https://www.olx.uz" + elements.find("a", href = True)['href']
+            {
+                "Name" : header,
+                "Price": elements.find('p').get_text(),
+                "Link": "https://www.olx.uz" + elements.find("a", href = True)['href'],
+
 
              }
         )
         houses.append(house)
         print(house)
 
+    print('\n\n\n Houses\n')
+    for ads in houses:
+        [print(key, ': ', value) for key, value in ads.items()]
 
 
 
